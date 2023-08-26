@@ -5,6 +5,7 @@ import 'react-pure-modal/dist/react-pure-modal.min.css';
 const Post = () => {
   const [posts, setPosts] = useState([])
   const [loader, setLoader] = useState(false)
+  const [viewLoader, setViewLoader] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalData, setModalData] = useState({})
@@ -23,18 +24,22 @@ const Post = () => {
   }
 
   const callViewPost = (id) => {
+    setViewLoader(true)
     fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-      .then(response => response.json())
-      .then(json => {
+    .then(response => response.json())
+    .then(json => {
         setModalData(json)
+        setViewLoader(false)
       })
   }
 
-  const callDeletePost = (id) =>  {
+  const callDeletePost = (id) => {
     fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
       method: 'DELETE'
+    }).then(response => response.json()).then(() => {
+      callPost()
     })
-    }
+  }
 
   if (loader) {
     return 'loading...'
@@ -68,11 +73,16 @@ const Post = () => {
     callViewPost(id)
   }
 
+  const handleLogOut = () => {
+    localStorage.removeItem('isLoggedIn')
+  }
+
   return (
     <>
       <input onChange={(event) => handleSearch(event)} onKeyUp={(event) => handleKeyPress(event)}></input>
       <button onClick={() => handleSearchResult()}>Search</button>
       <button onClick={() => callPost()}>Refresh</button>
+      <button onClick={()=> handleLogOut()}>Logout</button>
       {posts.map((data) => {
         return <div key={data.id}>
           ID:<p>{data.id}</p>
@@ -88,11 +98,11 @@ const Post = () => {
           setModalOpen(false);
           setModalData({});
           return true;
-        }}>
-          ID: <p>{modalData.id}</p>
-          Title: <p>{modalData.title}</p>
-          Body: <p>{modalData.body}</p>
-
+        }}> {viewLoader? "loading..." :
+        <>ID: <p>{modalData.id}</p>
+        Title: <p>{modalData.title}</p>
+        Body: <p>{modalData.body}</p></>}
+ 
       </PureModal>
     </>
   );
